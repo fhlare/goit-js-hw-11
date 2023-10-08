@@ -19,13 +19,6 @@
   }
 }
 
-.load-more {
-  display: none;
-}
-
-.visible {
-  display: inline-block;
-}
 
 .gallery {
   display: flex;
@@ -57,7 +50,6 @@ img {
   display: block;
 
   background-color: #4d5ae5;
-  ;
   color: #fff;
 
   margin-bottom: 4px;
@@ -69,29 +61,34 @@ img {
   border-color: transparent;
 
   transition: background-color 500ms cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
 }
 
-.btn-submit:hover,
-.btn-submit:focus {
-  background-color: #323a94;
+.btn-submit:hover{
+  background-color: #000;
 }
 
 .load-more {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 0 auto;
+  padding: 8px 20px;
   background-color: #4d5ae5;
-  ;
   color: #fff;
-
-  padding: 6 10;
-
   border-radius: 4px;
   border-color: transparent;
-
   transition: background-color 500ms cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+
 }
 
-.load-more:hover,
-.load-more:focus {
-  background-color: #323a94;
+.load-more:hover {
+  background-color: #000;
+}
+
+.load-more-hidden {
+  display: none;
 }
 
 .photo-card {

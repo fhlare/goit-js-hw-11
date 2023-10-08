@@ -5,78 +5,112 @@ import { createImageCard } from './createMarkup.js';
 import { getImage } from './fetch.js';
 import { refs } from './refs.js';
 
-let lightbox = new SimpleLightbox('.gallery a', {
-  captions: true,
-  captionsData: 'alt',
-  captionPosition: 'bottom',
-  captionDelay: 250,
-});
+
+
 
 let page = 1;
 let searchQuery = '';
+let lightbox = new SimpleLightbox('.gallery a');
 const perPage = 40;
-let data = {};
 
-refs.form.addEventListener('submit', onSubmit);
+refs.loaderMore.classList.replace('load-more', 'load-more-hidden');
 
-async function onSubmit(e) {
+refs.form.addEventListener('submit', onSubmitForm);
+
+function onSubmitForm(e) {
   e.preventDefault();
 
+  page = 1;
   searchQuery = e.target.elements.searchQuery.value.trim();
-  if (!searchQuery) {
+  refs.gallery.innerHTML = '';
+
+  if (searchQuery === '') {
+    Notiflix.Notify.failure(
+      'The search string cannot be empty. Please specify your search query.',
+      {
+        position: 'right-top',
+        timeout: 3000,
+      }
+    );
     return;
   }
-  page = 1;
-  refs.gallery.innerHTML = '';
-  try {
-    refs.loaderMore.classList.remove('visible');
-    refs.loader.classList.add('visible');
-    data = await getImage({ searchQuery, page, perPage });
 
-    if (data.hits.length === 0) {
-      Notiflix.Notify.failure(
-        'Sorry, there are no images matching your search query. Please try again.'
-      );
-      refs.loaderMore.classList.remove('visible');
-      return;
-    }
+  getImage(searchQuery, page, perPage)
+    .then(response => {
+      if (response.totalHits === 0) {
+        Notiflix.Notify.failure(
+          'Sorry, there are no images matching your search query. Please try again.',
+          {
+            position: 'right-top',
+            timeout: 3000,
+          }
+        );
+      } else {
+        refs.gallery.insertAdjacentHTML(
+          'beforeend',
+          createImageCard(response.hits)
+        );
+        lightbox.refresh();
+        Notiflix.Notify.success(
+          `Hooray! We found ${response.totalHits} images.`,
+          {
+            position: 'right-top',
+            timeout: 3000,
+          }
+        );
 
-    const totalHits = data.totalHits;
-    const imagesHTML = data.hits.map(image => createImageCard(image)).join('');
-    refs.gallery.innerHTML += imagesHTML;
-
-    if (refs.gallery.children.length >= totalHits) {
-      refs.loaderMore.classList.remove('visible');
-      refs.gallery.innerHTML +=
-        '<p class="end-results">We\'re sorry, but you\'ve reached the end of search results.</p>';
-    } else {
-      Notiflix.Notify.success(`Hooray! We found ${totalHits} images.`);
-      refs.loaderMore.classList.add('visible');
-    }
-  } catch (err) {
-    console.error('Error fetching images:', err);
-  } finally {
-    lightbox.refresh();
-    refs.loader.classList.remove('visible');
-  }
+        refs.loaderMore.classList.replace('load-more-hidden', 'load-more');
+      }
+    })
+    .catch(onGetImageError)
+    .finally(() => {
+      refs.form.reset();
+    });
 }
 
-refs.loaderMore.addEventListener('click', loadMore);
+refs.loaderMore.addEventListener('click', onLoadMoreClick);
 
-async function loadMore() {
+function onLoadMoreClick() {
   page += 1;
-  try {
-    refs.loaderMore.classList.remove('visible');
-    refs.loader.classList.add('visible');
-    data = await getImage({ searchQuery, page, perPage });
 
-    const imagesHTML = data.hits.map(image => createImageCard(image)).join('');
-    refs.gallery.innerHTML += imagesHTML;
-  } catch (err) {
-    console.error('Error fetching images:', err);
-  } finally {
-    lightbox.refresh();
-    refs.loaderMore.classList.add('visible');
-    refs.loader.classList.remove('visible');
-  }
+  getImage(searchQuery, page, perPage)
+    .then(response => {
+      refs.gallery.insertAdjacentHTML(
+        'beforeend',
+        createImageCard(response.hits)
+      );
+
+      lightbox.refresh();
+
+      const totalPages = Math.ceil(response.totalHits / perPage);
+
+      if (page < totalPages) {
+        refs.loaderMore.classList.replace('load-more-hidden', 'load-more');
+      } else {
+        Notiflix.Notify.info(
+          "We're sorry, but you've reached the end of search results.",
+          {
+            position: 'right-top',
+            timeout: 5000,
+          }
+        );
+
+        refs.loaderMore.classList.replace('load-more', 'load-more-hidden');
+      }
+    })
+    .catch(onGetImageError);
 }
+
+function onGetImageError(error) {
+  console.error(error);
+
+  Notiflix.Notify.failure(
+    'Sorry, there are no images matching your search query. Please try again.',
+    {
+      position: 'right-top',
+      timeout: 3000,
+    }
+  );
+}
+
+

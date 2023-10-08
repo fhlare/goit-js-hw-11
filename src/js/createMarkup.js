@@ -1,15 +1,28 @@
 export function createImageCard(image) {
-  return `
-    <div class="photo-card">
-      <a href="${image.largeImageURL}" data-lightbox="gallery">
-        <img src="${image.webformatURL}" alt="${image.tags}" loading="lazy" />
+  return image
+    .map(
+      ({
+        largeImageURL,
+        webformatURL,
+        tags,
+        likes,
+        views,
+        comments,
+        downloads,
+      }) => {
+    return `<div class="photo-card">
+      <a href="${largeImageURL}" data-lightbox="gallery">
+        <img src="${webformatURL}" alt="${tags}" loading="lazy" />
       </a>
       <div class="info">
-        <p class="info-item"><b>Likes:</b> ${image.likes}</p>
-        <p class="info-item"><b>Views:</b> ${image.views}</p>
-        <p class="info-item"><b>Comments:</b> ${image.comments}</p>
-        <p class="info-item"><b>Downloads:</b> ${image.downloads}</p>
+        <p class="info-item"><b>Likes:</b> ${likes}</p>
+        <p class="info-item"><b>Views:</b> ${views}</p>
+        <p class="info-item"><b>Comments:</b> ${comments}</p>
+        <p class="info-item"><b>Downloads:</b> ${downloads}</p>
       </div>
     </div>
   `;
+      }
+    )
+    .join('');
 }
